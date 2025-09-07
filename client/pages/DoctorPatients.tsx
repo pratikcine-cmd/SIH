@@ -7,14 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Search } from "lucide-react";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 export default function DoctorPatients() {
-  const { currentUser, doctors, requests, setRequests, generateMockPlan } = useAppState();
+  const { currentUser, doctors, requests } = useAppState();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const getDoctorProfileId = () => {
     const key = `app:doctor-map:${currentUser?.id || "anon"}`;
@@ -36,7 +33,6 @@ export default function DoctorPatients() {
   const markViewed = (id: string) => { const m = readLV(); m[id] = Date.now(); writeLV(m); };
 
   const myPatients = useMemo(() => requests.filter(r => r.doctorId === doctorProfileId && r.status === "accepted"), [requests, doctorProfileId]);
-  const selectedReq = useMemo(() => myPatients.find(r => r.id === selectedId) || null, [myPatients, selectedId]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -70,16 +66,9 @@ export default function DoctorPatients() {
 
   const openDetails = (id: string) => {
     markViewed(id);
-    setSelectedId(id);
+    navigate(`/doctor/patients/${id}`);
   };
 
-  const generatePlanFor = (id: string) => {
-    const plan = generateMockPlan();
-    const reqPlan = plan.meals.map(m => ({ time: m.time, name: m.name, calories: m.calories }));
-    setRequests(requests.map(r => r.id === id ? { ...r, status: "accepted", plan: reqPlan } : r));
-    markViewed(id);
-    setSelectedId(id);
-  };
 
   return (
     <div className="space-y-4">
@@ -136,9 +125,6 @@ export default function DoctorPatients() {
           </div>
         </CardContent>
       </Card>
-
-      {selectedReq && (
-        <div className="grid gap-4 md:grid-cols-3">
           <Card className="md:col-span-1 border-primary/30">
             <CardHeader>
               <CardTitle>Patient Details</CardTitle>
@@ -246,8 +232,6 @@ export default function DoctorPatients() {
               )}
             </CardContent>
           </Card>
-        </div>
-      )}
     </div>
   );
 }
