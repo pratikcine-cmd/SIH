@@ -33,8 +33,8 @@ export const AppLayout: React.FC = () => {
   return (
     <SidebarProvider>
       <Sidebar className="border-r">
-        <SidebarHeader>
-          <div className="flex items-center gap-2 px-2 py-1.5">
+        <SidebarHeader className="px-4">
+          <div className="flex items-center gap-2 py-1.5">
             <div className="h-8 w-8 rounded-md bg-[#0FA36B]" />
             <div>
               <div className="text-sm font-semibold tracking-tight">AyurWell</div>
@@ -101,7 +101,7 @@ export const AppLayout: React.FC = () => {
 const Topbar: React.FC = () => {
   const { currentUser } = useAppState();
   return (
-    <div className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b bg-background px-2">
+    <div className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b bg-background px-4">
       <SidebarTrigger />
       <Separator orientation="vertical" className="mx-2 h-6" />
       <div className="font-semibold">{currentUser?.role === "doctor" ? "Doctor Dashboard" : "AyurWell"}</div>
