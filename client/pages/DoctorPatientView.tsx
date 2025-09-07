@@ -38,7 +38,9 @@ export default function DoctorPatientView() {
       const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
       const date = d.toISOString().slice(0,10);
       const addSnack = { time: "16:00", name: "Fruit + Nuts", calories: 180, waterMl: 200, properties: ["Light","Sattvic"] };
-      const meals = [...base.meals, addSnack].map(m => ({ ...m, type: toType(m.time) }));
+      const withTypes = base.meals.map(m => ({ ...m, type: toType(m.time) }));
+      const hasSnack = withTypes.some(m => m.type === "Snack");
+      const meals = hasSnack ? withTypes : [...withTypes, { ...addSnack, type: "Snack" as const }];
       return { date, meals };
     });
     const wp = { days };
