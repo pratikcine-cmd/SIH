@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { MessageCircle, Salad, ScanLine, Stethoscope, ChefHat, BarChart3, LayoutDashboard, LogOut } from "lucide-react";
+import { MessageCircle, Salad, ScanLine, Stethoscope, ChefHat, BarChart3, LayoutDashboard, LogOut, Users } from "lucide-react";
 import React from "react";
 import { useAppState } from "@/context/app-state";
 import { ChatWidget } from "./ChatWidget";
@@ -19,6 +19,7 @@ export const AppLayout: React.FC = () => {
   const menu = isDoctor
     ? [
         { to: "/doctor", label: "Doctor Panel", icon: Stethoscope },
+        { to: "/doctor/patients", label: "Patients", icon: Users },
         { to: "/doctor/messages", label: "Messages", icon: MessageCircle },
       ]
     : [
@@ -88,7 +89,7 @@ export const AppLayout: React.FC = () => {
       </Sidebar>
       <SidebarInset>
         <Topbar />
-        <div className="px-4 pb-8">
+        <div className="px-4 pb-8 pt-4">
           <Outlet />
         </div>
       </SidebarInset>
@@ -100,7 +101,7 @@ export const AppLayout: React.FC = () => {
 const Topbar: React.FC = () => {
   const { currentUser } = useAppState();
   return (
-    <div className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b bg-background px-4">
+    <div className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b bg-background px-2">
       <SidebarTrigger />
       <Separator orientation="vertical" className="mx-2 h-6" />
       <div className="font-semibold">{currentUser?.role === "doctor" ? "Doctor Dashboard" : "AyurWell"}</div>
