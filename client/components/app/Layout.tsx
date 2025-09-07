@@ -20,6 +20,8 @@ export const AppLayout: React.FC = () => {
     ? [
         { to: "/doctor", label: "Doctor Panel", icon: Stethoscope },
         { to: "/doctor/patients", label: "Patients", icon: Users },
+        { to: "/doctor/generator/diet", label: "Diet Plan Generator", icon: Salad },
+        { to: "/doctor/generator/recipes", label: "Recipe Generator", icon: ChefHat },
         { to: "/doctor/messages", label: "Messages", icon: MessageCircle },
       ]
     : [
