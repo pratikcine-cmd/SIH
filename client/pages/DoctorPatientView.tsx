@@ -81,7 +81,7 @@ export default function DoctorPatientView() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <div className="text-xl font-semibold">{req.patientName || `Patient ${req.userId}`}</div>
-          <div className="text-sm text-muted-foreground">7-Day Diet Plan • Avg {stats.avgCalories || stats.avgCal} kcal • Avg {stats.avgWater} ml water</div>
+          <div className="text-sm text-muted-foreground">7-Day Diet Plan • Avg {stats.avgCal} kcal • Avg {stats.avgWater} ml water</div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={()=>navigate("/doctor/patients")}>Back to Patients</Button>
