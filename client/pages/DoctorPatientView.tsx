@@ -5,9 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
@@ -70,20 +69,6 @@ export default function DoctorPatientView() {
   const [weekly, setWeekly] = useState<WeeklyPlan | null>(() => loadWP());
   const [detail, setDetail] = useState<{ di: number; mi: number } | null>(null);
 
-  const updateMeal = (di: number, mi: number, patch: Partial<Meal>) => {
-    setWeekly((prev) => {
-      if (!prev) return prev;
-      const days = prev.days.map((day, i) => {
-        if (i !== di) return day;
-        const meals = day.meals.map((m, j) => (j === mi ? { ...m, ...patch } : m));
-        return { ...day, meals };
-      });
-      const next = { days };
-      saveWP(next);
-      return next;
-    });
-  };
-
   if (!req) {
     return (
       <div className="space-y-4">
@@ -124,8 +109,8 @@ export default function DoctorPatientView() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={()=>navigate("/doctor/patients")}>Back to Patients</Button>
-          <Button variant="outline" onClick={()=>navigate("/recipes")}>Recipe Generator</Button>
-          <Button onClick={()=>setWeekly(generate7())}>Generate Diet Plan</Button>
+          <Button variant="outline" onClick={()=>navigate("/doctor/generator/recipes")}>Recipe Generator</Button>
+          <Button onClick={()=>navigate("/doctor/generator/diet")}>Generate Diet Plan</Button>
         </div>
       </div>
 
@@ -195,48 +180,39 @@ export default function DoctorPatientView() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Date</TableHead>
-                      <TableHead>Time</TableHead>
-                      <TableHead>Type</TableHead>
                       <TableHead>Meal</TableHead>
-                      <TableHead className="hidden lg:table-cell">Properties</TableHead>
-                      <TableHead className="text-right">Calories</TableHead>
-                      <TableHead className="hidden md:table-cell text-right">Water (ml)</TableHead>
+                      <TableHead>Type</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {weekly.days.flatMap((day, di) => day.meals.map((m, mi) => (
-                      <TableRow key={`${day.date}-${mi}`}>
-                        <TableCell className="font-mono text-xs">{new Date(day.date).toLocaleDateString()}</TableCell>
-                        <TableCell className="w-[100px]">
-                          <Input value={m.time} onChange={(e)=>updateMeal(di, mi, { time: e.target.value, type: toType(e.target.value) })} className="h-8 py-1" />
-                        </TableCell>
-                        <TableCell className="w-[160px]">
-                          <Select value={m.type} onValueChange={(v)=>updateMeal(di, mi, { type: v as Meal["type"] })}>
-                            <SelectTrigger className="h-8">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Breakfast">Breakfast</SelectItem>
-                              <SelectItem value="Lunch">Lunch</SelectItem>
-                              <SelectItem value="Snack">Snack</SelectItem>
-                              <SelectItem value="Dinner">Dinner</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell className="min-w-[200px]">
-                          <Input value={m.name} onChange={(e)=>updateMeal(di, mi, { name: e.target.value })} onClick={()=>setDetail({di, mi})} className="h-8 py-1" />
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          <Input value={(m.properties||[]).join(", ")} onChange={(e)=>updateMeal(di, mi, { properties: e.target.value.split(",").map(s=>s.trim()).filter(Boolean) })} className="h-8 py-1" />
-                        </TableCell>
-                        <TableCell className="text-right w-[120px]">
-                          <Input type="number" value={m.calories} onChange={(e)=>updateMeal(di, mi, { calories: Number(e.target.value)||0, ...calcMacros(Number(e.target.value)||0) })} className="h-8 py-1 text-right" />
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell text-right w-[120px]">
-                          <Input type="number" value={m.waterMl || 0} onChange={(e)=>updateMeal(di, mi, { waterMl: Number(e.target.value)||0 })} className="h-8 py-1 text-right" />
-                        </TableCell>
-                      </TableRow>
-                    )))}
+                    {weekly.days.map((day, di) => (
+                      day.meals.map((m, mi) => (
+                        <TableRow key={`${day.date}-${mi}`}>
+                          {mi === 0 ? (
+                            <TableCell rowSpan={day.meals.length} className="font-mono text-xs align-top">
+                              {new Date(day.date).toLocaleDateString()}
+                            </TableCell>
+                          ) : null}
+                          <TableCell>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button className="underline-offset-2 hover:underline" onClick={()=>setDetail({di, mi})}>{m.name}</button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <div className="max-w-xs text-xs">
+                                  <div className="font-medium">{m.name}</div>
+                                  <div>Calories: {m.calories}</div>
+                                  {m.dosha && <div>Dosha: {m.dosha}</div>}
+                                  {m.rasa && <div>Rasa: {m.rasa}</div>}
+                                  {m.properties && m.properties.length>0 && <div>Props: {m.properties.join(", ")}</div>}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TableCell>
+                          <TableCell>{m.type}</TableCell>
+                        </TableRow>
+                      ))
+                    ))}
                   </TableBody>
                 </Table>
               </div>
@@ -245,82 +221,63 @@ export default function DoctorPatientView() {
 
           <Dialog open={!!detail} onOpenChange={(o)=>!o && setDetail(null)}>
             <DialogContent className="sm:max-w-[560px]">
-              {detail && (
+              {detail && weekly && (
                 <>
                   <DialogHeader>
                     <DialogTitle>Meal Details</DialogTitle>
-                    <DialogDescription>Edit nutrition and Ayurveda properties</DialogDescription>
+                    <DialogDescription>Nutrition and Ayurveda properties</DialogDescription>
                   </DialogHeader>
                   {(() => {
                     const m = weekly.days[detail.di].meals[detail.mi];
                     const date = weekly.days[detail.di].date;
                     return (
-                      <div className="space-y-3">
+                      <div className="space-y-3 text-sm">
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <div className="text-xs text-muted-foreground">Date</div>
-                            <div className="font-mono text-xs">{new Date(date).toLocaleString()}</div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground">Time</div>
-                            <Input value={m.time} onChange={(e)=>updateMeal(detail.di, detail.mi, { time: e.target.value, type: toType(e.target.value) })} />
+                            <div className="font-mono text-xs">{new Date(date).toLocaleDateString()}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground">Type</div>
-                            <Select value={m.type} onValueChange={(v)=>updateMeal(detail.di, detail.mi, { type: v as Meal["type"] })}>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Breakfast">Breakfast</SelectItem>
-                                <SelectItem value="Lunch">Lunch</SelectItem>
-                                <SelectItem value="Snack">Snack</SelectItem>
-                                <SelectItem value="Dinner">Dinner</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <div className="font-medium">{m.type}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground">Meal</div>
-                            <Input value={m.name} onChange={(e)=>updateMeal(detail.di, detail.mi, { name: e.target.value })} />
+                            <div className="font-medium">{m.name}</div>
                           </div>
                         </div>
                         <div className="grid grid-cols-3 gap-3">
                           <div>
                             <div className="text-xs text-muted-foreground">Calories</div>
-                            <Input type="number" value={m.calories} onChange={(e)=>updateMeal(detail.di, detail.mi, { calories: Number(e.target.value)||0, ...calcMacros(Number(e.target.value)||0) })} />
+                            <div>{m.calories}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground">Protein (g)</div>
-                            <Input type="number" value={m.protein || 0} onChange={(e)=>updateMeal(detail.di, detail.mi, { protein: Number(e.target.value)||0 })} />
+                            <div>{m.protein ?? "—"}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground">Carbs (g)</div>
-                            <Input type="number" value={m.carbs || 0} onChange={(e)=>updateMeal(detail.di, detail.mi, { carbs: Number(e.target.value)||0 })} />
+                            <div>{m.carbs ?? "—"}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground">Fat (g)</div>
-                            <Input type="number" value={m.fat || 0} onChange={(e)=>updateMeal(detail.di, detail.mi, { fat: Number(e.target.value)||0 })} />
-                          </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground">Water (ml)</div>
-                            <Input type="number" value={m.waterMl || 0} onChange={(e)=>updateMeal(detail.di, detail.mi, { waterMl: Number(e.target.value)||0 })} />
+                            <div>{m.fat ?? "—"}</div>
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <div className="text-xs text-muted-foreground">Dosha</div>
-                            <Input value={m.dosha || ""} onChange={(e)=>updateMeal(detail.di, detail.mi, { dosha: e.target.value })} placeholder="Vata / Pitta / Kapha / Tridoshic" />
+                            <div>{m.dosha || "—"}</div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground">Rasa</div>
-                            <Input value={m.rasa || ""} onChange={(e)=>updateMeal(detail.di, detail.mi, { rasa: e.target.value })} placeholder="Madhura / Amla / Lavana / ..." />
+                            <div>{m.rasa || "—"}</div>
                           </div>
                         </div>
                         <div>
                           <div className="text-xs text-muted-foreground">Properties</div>
-                          <Input value={(m.properties||[]).join(", ")} onChange={(e)=>updateMeal(detail.di, detail.mi, { properties: e.target.value.split(",").map(s=>s.trim()).filter(Boolean) })} />
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {(m.properties || []).map(p => <Badge key={p} variant="secondary">{p}</Badge>)}
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {(m.properties || []).length ? (m.properties || []).map(p => <Badge key={p} variant="secondary">{p}</Badge>) : <span className="text-muted-foreground">—</span>}
                           </div>
                         </div>
                       </div>
