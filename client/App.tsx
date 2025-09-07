@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import DoctorPatients from "./pages/DoctorPatients";
+import DoctorPatientView from "./pages/DoctorPatientView";
 import DietPlanPage from "./pages/DietPlan";
 import Tracking from "./pages/Tracking";
 import Recipes from "./pages/Recipes";
@@ -59,6 +60,7 @@ const AppRoutes = () => (
       <Route element={<DoctorGuard />}>
         <Route path="/doctor" element={<DoctorDashboard />} />
         <Route path="/doctor/patients" element={<DoctorPatients />} />
+        <Route path="/doctor/patients/:id" element={<DoctorPatientView />} />
         <Route path="/doctor/messages" element={<Suspense fallback={null}><DoctorMessagesLazy /></Suspense>} />
       </Route>
     </Route>
