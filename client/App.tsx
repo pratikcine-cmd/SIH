@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import DoctorDashboard from "./pages/DoctorDashboard";
+import DoctorPatients from "./pages/DoctorPatients";
 import DietPlanPage from "./pages/DietPlan";
 import Tracking from "./pages/Tracking";
 import Recipes from "./pages/Recipes";
