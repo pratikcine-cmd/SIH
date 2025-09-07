@@ -394,10 +394,6 @@ export default function DoctorDashboard() {
 
   const isApproved = selectedReq.status === "accepted";
 
-  useEffect(() => {
-    if (selectedReq?.id) markViewed(selectedReq.id);
-  }, [selectedReq?.id]);
-
   const send = () => {
     if (!draft.trim() || !selectedReq) return;
     addMessage(selectedReq.id, { from: "doctor", text: draft.trim() });
