@@ -58,6 +58,7 @@ const AppRoutes = () => (
       </Route>
       <Route element={<DoctorGuard />}>
         <Route path="/doctor" element={<DoctorDashboard />} />
+        <Route path="/doctor/patients" element={<DoctorPatients />} />
         <Route path="/doctor/messages" element={<Suspense fallback={null}><DoctorMessagesLazy /></Suspense>} />
       </Route>
     </Route>
