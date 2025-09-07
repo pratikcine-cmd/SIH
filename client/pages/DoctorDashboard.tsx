@@ -207,6 +207,10 @@ export default function DoctorDashboard() {
       );
     }
   }, [selectedReq?.id]);
+  useEffect(() => {
+    if (selectedReq?.id) markViewed(selectedReq.id);
+  }, [selectedReq?.id]);
+
   const pendingForMe = useMemo(
     () =>
       requests.filter(
