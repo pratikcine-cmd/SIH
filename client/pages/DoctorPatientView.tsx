@@ -50,7 +50,7 @@ export default function DoctorPatientView() {
     return wp;
   };
 
-  const [weekly, setWeekly] = useState<WeeklyPlan>(() => loadWP() || generate7());
+  const [weekly, setWeekly] = useState<WeeklyPlan | null>(() => loadWP());
 
   if (!req) {
     return (
