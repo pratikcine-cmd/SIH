@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
@@ -14,7 +17,8 @@ export default function DoctorPatientView() {
   const { requests, setRequests, generateMockPlan } = useAppState();
   const req = useMemo(() => requests.find(r => r.id === id), [requests, id]);
 
-  type DayPlan = { date: string; meals: { time: string; type: "Breakfast"|"Lunch"|"Snack"|"Dinner"; name: string; calories: number; waterMl?: number; properties?: string[] }[] };
+  type Meal = { time: string; type: "Breakfast"|"Lunch"|"Snack"|"Dinner"; name: string; calories: number; waterMl?: number; properties?: string[]; dosha?: string; rasa?: string; protein?: number; carbs?: number; fat?: number };
+  type DayPlan = { date: string; meals: Meal[] };
   type WeeklyPlan = { days: DayPlan[] };
   const wpKey = `app:weeklyPlan:${id}`;
   const loadWP = (): WeeklyPlan | null => {
@@ -31,16 +35,29 @@ export default function DoctorPatientView() {
     return "Dinner";
   };
 
+  const calcMacros = (cal: number) => {
+    const protein = Math.round((cal * 0.2) / 4);
+    const carbs = Math.round((cal * 0.55) / 4);
+    const fat = Math.round((cal * 0.25) / 9);
+    return { protein, carbs, fat };
+  };
+
   const generate7 = () => {
     const base = generateMockPlan();
     const start = new Date();
     const days: DayPlan[] = Array.from({ length: 7 }).map((_, i) => {
       const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
       const date = d.toISOString().slice(0,10);
-      const addSnack = { time: "16:00", name: "Fruit + Nuts", calories: 180, waterMl: 200, properties: ["Light","Sattvic"] };
-      const withTypes = base.meals.map(m => ({ ...m, type: toType(m.time) }));
+      const addSnack: Meal = { time: "16:00", name: "Fruit + Nuts", calories: 180, waterMl: 200, properties: ["Light","Sattvic"], type: "Snack", dosha: (req?.patientDosha || "Tridoshic") as any, rasa: "Madhura", ...calcMacros(180) };
+      const withTypes: Meal[] = base.meals.map((m) => {
+        const type = toType(m.time);
+        const rasaProp = (m.properties || []).find(p => p.startsWith("Rasa:")) || "Rasa: Madhura";
+        const rasa = rasaProp.replace("Rasa:", "").trim();
+        const macros = calcMacros(m.calories || 0);
+        return { ...m, type, dosha: (req?.patientDosha || "Tridoshic") as any, rasa, ...macros };
+      });
       const hasSnack = withTypes.some(m => m.type === "Snack");
-      const meals = hasSnack ? withTypes : [...withTypes, { ...addSnack, type: "Snack" as const }];
+      const meals = hasSnack ? withTypes : [...withTypes, addSnack];
       return { date, meals };
     });
     const wp = { days };
@@ -51,6 +68,21 @@ export default function DoctorPatientView() {
   };
 
   const [weekly, setWeekly] = useState<WeeklyPlan | null>(() => loadWP());
+  const [detail, setDetail] = useState<{ di: number; mi: number } | null>(null);
+
+  const updateMeal = (di: number, mi: number, patch: Partial<Meal>) => {
+    setWeekly((prev) => {
+      if (!prev) return prev;
+      const days = prev.days.map((day, i) => {
+        if (i !== di) return day;
+        const meals = day.meals.map((m, j) => (j === mi ? { ...m, ...patch } : m));
+        return { ...day, meals };
+      });
+      const next = { days };
+      saveWP(next);
+      return next;
+    });
+  };
 
   if (!req) {
     return (
@@ -153,47 +185,151 @@ export default function DoctorPatientView() {
             </CardContent>
           </Card>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            {weekly.days.map((day) => (
-              <Card key={day.date} className="border-sidebar-border">
-                <CardHeader>
-                  <CardTitle>{new Date(day.date).toLocaleDateString(undefined,{ weekday:"short", month:"short", day:"numeric" })}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="rounded-lg border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Time</TableHead>
-                          <TableHead>Meal</TableHead>
-                          <TableHead className="hidden lg:table-cell">Properties</TableHead>
-                          <TableHead className="text-right">Calories</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {day.meals.map((m, i) => (
-                          <TableRow key={i}>
-                            <TableCell>{m.type}</TableCell>
-                            <TableCell className="font-mono text-xs">{m.time}</TableCell>
-                            <TableCell>{m.name}</TableCell>
-                            <TableCell className="hidden lg:table-cell">
-                              <div className="flex flex-wrap gap-1">
-                                {(m.properties || ["Sattvic"]).map(p => (
-                                  <Badge key={p} variant="secondary">{p}</Badge>
-                                ))}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right">{m.calories}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>7-Day Plan</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-lg border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Time</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Meal</TableHead>
+                      <TableHead className="hidden lg:table-cell">Properties</TableHead>
+                      <TableHead className="text-right">Calories</TableHead>
+                      <TableHead className="hidden md:table-cell text-right">Water (ml)</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {weekly.days.flatMap((day, di) => day.meals.map((m, mi) => (
+                      <TableRow key={`${day.date}-${mi}`}>
+                        <TableCell className="font-mono text-xs">{new Date(day.date).toLocaleDateString()}</TableCell>
+                        <TableCell className="w-[100px]">
+                          <Input value={m.time} onChange={(e)=>updateMeal(di, mi, { time: e.target.value, type: toType(e.target.value) })} className="h-8 py-1" />
+                        </TableCell>
+                        <TableCell className="w-[160px]">
+                          <Select value={m.type} onValueChange={(v)=>updateMeal(di, mi, { type: v as Meal["type"] })}>
+                            <SelectTrigger className="h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Breakfast">Breakfast</SelectItem>
+                              <SelectItem value="Lunch">Lunch</SelectItem>
+                              <SelectItem value="Snack">Snack</SelectItem>
+                              <SelectItem value="Dinner">Dinner</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="min-w-[200px]">
+                          <Input value={m.name} onChange={(e)=>updateMeal(di, mi, { name: e.target.value })} onClick={()=>setDetail({di, mi})} className="h-8 py-1" />
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          <Input value={(m.properties||[]).join(", ")} onChange={(e)=>updateMeal(di, mi, { properties: e.target.value.split(",").map(s=>s.trim()).filter(Boolean) })} className="h-8 py-1" />
+                        </TableCell>
+                        <TableCell className="text-right w-[120px]">
+                          <Input type="number" value={m.calories} onChange={(e)=>updateMeal(di, mi, { calories: Number(e.target.value)||0, ...calcMacros(Number(e.target.value)||0) })} className="h-8 py-1 text-right" />
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-right w-[120px]">
+                          <Input type="number" value={m.waterMl || 0} onChange={(e)=>updateMeal(di, mi, { waterMl: Number(e.target.value)||0 })} className="h-8 py-1 text-right" />
+                        </TableCell>
+                      </TableRow>
+                    )))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Dialog open={!!detail} onOpenChange={(o)=>!o && setDetail(null)}>
+            <DialogContent className="sm:max-w-[560px]">
+              {detail && (
+                <>
+                  <DialogHeader>
+                    <DialogTitle>Meal Details</DialogTitle>
+                    <DialogDescription>Edit nutrition and Ayurveda properties</DialogDescription>
+                  </DialogHeader>
+                  {(() => {
+                    const m = weekly.days[detail.di].meals[detail.mi];
+                    const date = weekly.days[detail.di].date;
+                    return (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <div className="text-xs text-muted-foreground">Date</div>
+                            <div className="font-mono text-xs">{new Date(date).toLocaleString()}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground">Time</div>
+                            <Input value={m.time} onChange={(e)=>updateMeal(detail.di, detail.mi, { time: e.target.value, type: toType(e.target.value) })} />
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground">Type</div>
+                            <Select value={m.type} onValueChange={(v)=>updateMeal(detail.di, detail.mi, { type: v as Meal["type"] })}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Breakfast">Breakfast</SelectItem>
+                                <SelectItem value="Lunch">Lunch</SelectItem>
+                                <SelectItem value="Snack">Snack</SelectItem>
+                                <SelectItem value="Dinner">Dinner</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground">Meal</div>
+                            <Input value={m.name} onChange={(e)=>updateMeal(detail.di, detail.mi, { name: e.target.value })} />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <div className="text-xs text-muted-foreground">Calories</div>
+                            <Input type="number" value={m.calories} onChange={(e)=>updateMeal(detail.di, detail.mi, { calories: Number(e.target.value)||0, ...calcMacros(Number(e.target.value)||0) })} />
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground">Protein (g)</div>
+                            <Input type="number" value={m.protein || 0} onChange={(e)=>updateMeal(detail.di, detail.mi, { protein: Number(e.target.value)||0 })} />
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground">Carbs (g)</div>
+                            <Input type="number" value={m.carbs || 0} onChange={(e)=>updateMeal(detail.di, detail.mi, { carbs: Number(e.target.value)||0 })} />
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground">Fat (g)</div>
+                            <Input type="number" value={m.fat || 0} onChange={(e)=>updateMeal(detail.di, detail.mi, { fat: Number(e.target.value)||0 })} />
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground">Water (ml)</div>
+                            <Input type="number" value={m.waterMl || 0} onChange={(e)=>updateMeal(detail.di, detail.mi, { waterMl: Number(e.target.value)||0 })} />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <div className="text-xs text-muted-foreground">Dosha</div>
+                            <Input value={m.dosha || ""} onChange={(e)=>updateMeal(detail.di, detail.mi, { dosha: e.target.value })} placeholder="Vata / Pitta / Kapha / Tridoshic" />
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground">Rasa</div>
+                            <Input value={m.rasa || ""} onChange={(e)=>updateMeal(detail.di, detail.mi, { rasa: e.target.value })} placeholder="Madhura / Amla / Lavana / ..." />
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-muted-foreground">Properties</div>
+                          <Input value={(m.properties||[]).join(", ")} onChange={(e)=>updateMeal(detail.di, detail.mi, { properties: e.target.value.split(",").map(s=>s.trim()).filter(Boolean) })} />
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {(m.properties || []).map(p => <Badge key={p} variant="secondary">{p}</Badge>)}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </>
+              )}
+            </DialogContent>
+          </Dialog>
         </>
       ) : (
         <Card className="border-destructive/30">
