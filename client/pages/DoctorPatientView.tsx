@@ -66,13 +66,14 @@ export default function DoctorPatientView() {
   }
 
   const stats = useMemo(() => {
+    if (!weekly) return { perDay: [], avgCal: 0, avgWater: 0 };
     const perDay = weekly.days.map(d => ({
       date: d.date,
       calories: d.meals.reduce((s,m)=>s+(m.calories||0),0),
       water: d.meals.reduce((s,m)=>s+(m.waterMl||0),0),
     }));
-    const avgCal = Math.round(perDay.reduce((s,x)=>s+x.calories,0)/perDay.length);
-    const avgWater = Math.round(perDay.reduce((s,x)=>s+x.water,0)/perDay.length);
+    const avgCal = perDay.length ? Math.round(perDay.reduce((s,x)=>s+x.calories,0)/perDay.length) : 0;
+    const avgWater = perDay.length ? Math.round(perDay.reduce((s,x)=>s+x.water,0)/perDay.length) : 0;
     return { perDay, avgCal, avgWater };
   }, [weekly]);
 
