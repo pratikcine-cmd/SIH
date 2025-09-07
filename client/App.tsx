@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import DoctorPatients from "./pages/DoctorPatients";
 import DoctorPatientView from "./pages/DoctorPatientView";
+import Placeholder from "./pages/Placeholder";
 import DietPlanPage from "./pages/DietPlan";
 import Tracking from "./pages/Tracking";
 import Recipes from "./pages/Recipes";
