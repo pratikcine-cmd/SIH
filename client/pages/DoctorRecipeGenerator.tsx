@@ -112,7 +112,7 @@ export default function DoctorRecipeGenerator() {
             />
             <Button onClick={fetchPatient}>Fetch Patient</Button>
           </div>
-          {fetchedName && (
+          {fetchedName && !confirmed && (
             <div className="mt-3 rounded-md border bg-secondary/30 p-3">
               <div className="font-medium">{fetchedName}</div>
               <div className="mt-2 text-sm">Is this the correct patient?</div>
