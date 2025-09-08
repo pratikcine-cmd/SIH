@@ -109,8 +109,8 @@ export default function DoctorPatientView() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={()=>navigate("/doctor/patients")}>Back to Patients</Button>
-          <Button variant="outline" onClick={()=>navigate("/doctor/generator/recipes")}>Recipe Generator</Button>
-          <Button onClick={()=>navigate("/doctor/generator/diet")}>Generate Diet Plan</Button>
+          <Button variant="outline" onClick={()=>navigate(`/doctor/generator/recipes?pid=${req.userId}`)}>Recipe Generator</Button>
+          <Button onClick={()=>navigate(`/doctor/generator/diet?pid=${req.userId}`)}>Generate Diet Plan</Button>
         </div>
       </div>
 

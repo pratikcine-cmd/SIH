@@ -20,6 +20,9 @@ export default function DoctorDietGenerator() {
 
   // Step 1
   const [patientId, setPatientId] = useState("");
+  const search = new URLSearchParams(location.search);
+  const pid = search.get("pid") || "";
+  useState(() => { if (pid) setPatientId(pid); return undefined; });
   const [fetchedName, setFetchedName] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
 

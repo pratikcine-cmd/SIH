@@ -14,6 +14,7 @@ import DoctorPatients from "./pages/DoctorPatients";
 import DoctorPatientView from "./pages/DoctorPatientView";
 import DoctorDietGenerator from "./pages/DoctorDietGenerator";
 import Placeholder from "./pages/Placeholder";
+import DoctorRecipeGenerator from "./pages/DoctorRecipeGenerator";
 import DietPlanPage from "./pages/DietPlan";
 import Tracking from "./pages/Tracking";
 import Recipes from "./pages/Recipes";
@@ -64,7 +65,7 @@ const AppRoutes = () => (
         <Route path="/doctor/patients" element={<DoctorPatients />} />
         <Route path="/doctor/patients/:id" element={<DoctorPatientView />} />
         <Route path="/doctor/generator/diet" element={<DoctorDietGenerator />} />
-        <Route path="/doctor/generator/recipes" element={<Placeholder title="Recipe Generator" description="Generate recipes and suggestions here." />} />
+        <Route path="/doctor/generator/recipes" element={<DoctorRecipeGenerator />} />
         <Route path="/doctor/messages" element={<Suspense fallback={null}><DoctorMessagesLazy /></Suspense>} />
       </Route>
     </Route>
