@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import DoctorPatients from "./pages/DoctorPatients";
 import DoctorPatientView from "./pages/DoctorPatientView";
+import DoctorDietGenerator from "./pages/DoctorDietGenerator";
 import Placeholder from "./pages/Placeholder";
 import DietPlanPage from "./pages/DietPlan";
 import Tracking from "./pages/Tracking";
@@ -62,7 +63,7 @@ const AppRoutes = () => (
         <Route path="/doctor" element={<DoctorDashboard />} />
         <Route path="/doctor/patients" element={<DoctorPatients />} />
         <Route path="/doctor/patients/:id" element={<DoctorPatientView />} />
-        <Route path="/doctor/generator/diet" element={<Placeholder title="Diet Plan Generator" description="Build personalized 7-day diet plans here." />} />
+        <Route path="/doctor/generator/diet" element={<DoctorDietGenerator />} />
         <Route path="/doctor/generator/recipes" element={<Placeholder title="Recipe Generator" description="Generate recipes and suggestions here." />} />
         <Route path="/doctor/messages" element={<Suspense fallback={null}><DoctorMessagesLazy /></Suspense>} />
       </Route>

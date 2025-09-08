@@ -108,6 +108,7 @@ export default function DoctorPatients() {
                           <Avatar className="h-8 w-8"><AvatarFallback>{initials}</AvatarFallback></Avatar>
                           <div>
                             <div className="font-medium leading-tight">{name}</div>
+                            <div className="text-xs text-muted-foreground">ID: {r.userId}</div>
                           </div>
                         </div>
                       </TableCell>
