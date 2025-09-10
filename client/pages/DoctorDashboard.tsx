@@ -30,6 +30,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useSearchParams } from "react-router-dom";
 
 export default function DoctorDashboard() {
   const {
@@ -50,8 +51,8 @@ export default function DoctorDashboard() {
   ];
   const [plan, setPlan] = useState(defaultPlan);
   const [selected, setSelected] = useState<string | null>(null);
-  const [tab, setTab] = useState<"requests" | "patients">("requests");
   const [addPatientOpen, setAddPatientOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
   type MealInfo = { name: string; kcal: number; tags: string[]; icon: string };
@@ -189,6 +190,14 @@ export default function DoctorDashboard() {
     () => requests.find((r) => r.id === selected) || null,
     [requests, selected],
   );
+
+  useEffect(() => {
+    const open = searchParams.get("open");
+    if (open && !selected) {
+      const exists = requests.some(r => r.id === open);
+      if (exists) setSelected(open);
+    }
+  }, [searchParams, requests]);
   useEffect(() => {
     if (selectedReq) {
       setPlan(
@@ -198,6 +207,10 @@ export default function DoctorDashboard() {
       );
     }
   }, [selectedReq?.id]);
+  useEffect(() => {
+    if (selectedReq?.id) markViewed(selectedReq.id);
+  }, [selectedReq?.id]);
+
   const pendingForMe = useMemo(
     () =>
       requests.filter(
@@ -212,6 +225,15 @@ export default function DoctorDashboard() {
       ),
     [requests, doctorProfileId],
   );
+
+  const lvKey = `app:patients:lastViewed:${doctorProfileId}`;
+  const markViewed = (id: string) => {
+    try {
+      const m = JSON.parse(localStorage.getItem(lvKey) || "{}");
+      m[id] = Date.now();
+      localStorage.setItem(lvKey, JSON.stringify(m));
+    } catch {}
+  };
 
   if (!selectedReq) {
     return (
@@ -253,30 +275,7 @@ export default function DoctorDashboard() {
             </div>
             <div className="rounded-lg border">
               <div className="flex items-center justify-between flex-wrap gap-2 border-b p-2 text-sm">
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setTab("requests")}
-                    className={cn(
-                      "rounded-md px-3 py-1.5",
-                      tab === "requests"
-                        ? "bg-muted font-medium"
-                        : "hover:bg-muted",
-                    )}
-                  >
-                    Requests
-                  </button>
-                  <button
-                    onClick={() => setTab("patients")}
-                    className={cn(
-                      "rounded-md px-3 py-1.5",
-                      tab === "patients"
-                        ? "bg-muted font-medium"
-                        : "hover:bg-muted",
-                    )}
-                  >
-                    My Patients
-                  </button>
-                </div>
+                <div className="font-medium">Requests</div>
                 <Dialog open={addPatientOpen} onOpenChange={setAddPatientOpen}>
                   <DialogTrigger asChild>
                     <Button size="sm">Add Patient</Button>
@@ -322,115 +321,67 @@ export default function DoctorDashboard() {
                 </Dialog>
               </div>
               <div className="p-3">
-                {tab === "requests" ? (
-                  <div>
-                    <div className="mb-2 text-sm font-semibold">
-                      Patient Requests
-                    </div>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Req ID</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {pendingForMe.length === 0 && (
-                          <TableRow>
-                            <TableCell
-                              colSpan={3}
-                              className="text-center text-muted-foreground"
-                            >
-                              No pending requests
-                            </TableCell>
-                          </TableRow>
-                        )}
-                        {pendingForMe.map((r) => (
-                          <TableRow key={r.id} className="hover:bg-muted/40">
-                            <TableCell className="font-mono text-xs">
-                              {r.id}
-                            </TableCell>
-                            <TableCell>
-                              <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
-                                Pending
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-right space-x-1">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => accept(r.id)}
-                              >
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => reject(r.id)}
-                              >
-                                Reject
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => setSelected(r.id)}
-                              >
-                                Open
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                <div>
+                  <div className="mb-2 text-sm font-semibold">
+                    Patient Requests
                   </div>
-                ) : (
-                  <div>
-                    <div className="mb-2 text-sm font-semibold">
-                      My Patients
-                    </div>
-                    <Table>
-                      <TableHeader>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Req ID</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {pendingForMe.length === 0 && (
                         <TableRow>
-                          <TableHead>Req ID</TableHead>
-                          <TableHead>Patient</TableHead>
-                          <TableHead className="text-right">Action</TableHead>
+                          <TableCell
+                            colSpan={3}
+                            className="text-center text-muted-foreground"
+                          >
+                            No pending requests
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {myPatients.length === 0 && (
-                          <TableRow>
-                            <TableCell
-                              colSpan={3}
-                              className="text-center text-muted-foreground"
+                      )}
+                      {pendingForMe.map((r) => (
+                        <TableRow key={r.id} className="hover:bg-muted/40">
+                          <TableCell className="font-mono text-xs">
+                            {r.id}
+                          </TableCell>
+                          <TableCell>
+                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
+                              Pending
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right space-x-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => accept(r.id)}
                             >
-                              No active consultations
-                            </TableCell>
-                          </TableRow>
-                        )}
-                        {myPatients.map((r) => (
-                          <TableRow key={r.id} className="hover:bg-muted/40">
-                            <TableCell className="font-mono text-xs">
-                              {r.id}
-                            </TableCell>
-                            <TableCell>
-                              {r.patientName || `Patient ${r.userId}`}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => setSelected(r.id)}
-                              >
-                                Open
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => reject(r.id)}
+                            >
+                              Reject
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => { setSelected(r.id); markViewed(r.id); setSearchParams(prev => { const p = new URLSearchParams(prev); p.set("open", r.id); return p; }); }}
+                            >
+                              Open
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -486,7 +437,7 @@ export default function DoctorDashboard() {
           {!isApproved && (
             <Button onClick={() => accept(selectedReq.id)}>Approve</Button>
           )}
-          <Button variant="outline" onClick={() => setSelected(null)}>
+          <Button variant="outline" onClick={() => { setSelected(null); setSearchParams(prev => { const p = new URLSearchParams(prev); p.delete("open"); return p; }); }}>
             Back
           </Button>
         </div>
