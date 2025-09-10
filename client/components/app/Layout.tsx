@@ -5,10 +5,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { MessageCircle, Salad, ScanLine, Stethoscope, ChefHat, BarChart3, LayoutDashboard, LogOut } from "lucide-react";
+import { MessageCircle, Salad, ScanLine, Stethoscope, ChefHat, BarChart3, LayoutDashboard, LogOut, Users } from "lucide-react";
 import React from "react";
 import { useAppState } from "@/context/app-state";
-import { ChatWidget } from "./ChatWidget";
 
 export const AppLayout: React.FC = () => {
   const { currentUser, setCurrentUser } = useAppState();
@@ -19,6 +18,9 @@ export const AppLayout: React.FC = () => {
   const menu = isDoctor
     ? [
         { to: "/doctor", label: "Doctor Panel", icon: Stethoscope },
+        { to: "/doctor/patients", label: "Patients", icon: Users },
+        { to: "/doctor/generator/diet", label: "Diet Plan Generator", icon: Salad },
+        { to: "/doctor/generator/recipes", label: "Recipe Generator", icon: ChefHat },
         { to: "/doctor/messages", label: "Messages", icon: MessageCircle },
          { to: "/diet-plan", label: "Diet Plan", icon: Salad },
          { to: "/recipes", label: "Recipes", icon: ChefHat },
@@ -33,8 +35,8 @@ export const AppLayout: React.FC = () => {
   return (
     <SidebarProvider>
       <Sidebar className="border-r">
-        <SidebarHeader>
-          <div className="flex items-center gap-2 px-2 py-1.5">
+        <SidebarHeader className="px-4">
+          <div className="flex items-center gap-2 py-1.5">
             <div className="h-8 w-8 rounded-md bg-[#0FA36B]" />
             <div>
               <div className="text-sm font-semibold tracking-tight">AyurWell</div>
@@ -88,11 +90,10 @@ export const AppLayout: React.FC = () => {
       </Sidebar>
       <SidebarInset>
         <Topbar />
-        <div className="px-4 pb-8">
+        <div className="px-4 pb-8 pt-4">
           <Outlet />
         </div>
       </SidebarInset>
-      <ChatWidget />
     </SidebarProvider>
   );
 };
