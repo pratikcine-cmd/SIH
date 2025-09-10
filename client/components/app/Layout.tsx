@@ -20,10 +20,11 @@ export const AppLayout: React.FC = () => {
     ? [
         { to: "/doctor", label: "Doctor Panel", icon: Stethoscope },
         { to: "/doctor/messages", label: "Messages", icon: MessageCircle },
+         { to: "/diet-plan", label: "Diet Plan", icon: Salad },
+         { to: "/recipes", label: "Recipes", icon: ChefHat },
       ]
     : [
         { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-        { to: "/diet-plan", label: "Diet Plan", icon: Salad },
         { to: "/tracking", label: "Tracking", icon: BarChart3 },
         { to: "/recipes", label: "Recipes", icon: ChefHat },
         { to: "/scan", label: "Scan", icon: ScanLine },
@@ -44,7 +45,6 @@ export const AppLayout: React.FC = () => {
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
             <SidebarMenu>
               {menu.map((item) => (
                 <SidebarMenuItem key={item.to}>

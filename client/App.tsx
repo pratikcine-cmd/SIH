@@ -17,6 +17,7 @@ import Scan from "./pages/Scan";
 import { AppLayout } from "./components/app/Layout";
 import { AppStateProvider, useAppState } from "@/context/app-state";
 import { lazy, Suspense } from "react";
+import RegisterUser from "./pages/RegisterUser";
 const DoctorMessagesLazy = lazy(() => import("./pages/DoctorMessages"));
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -41,6 +42,7 @@ const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<Index />} />
     <Route path="/login" element={<Login />} />
+    <Route path="/register" element={<RegisterUser />} />
     <Route
       element={
         <ProtectedRoute>

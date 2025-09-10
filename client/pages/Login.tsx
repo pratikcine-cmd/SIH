@@ -113,7 +113,7 @@ export default function Login() {
                 {mode === "signup" ? (
                   <>Already have an account? <a className="underline-offset-4 hover:underline" href={`/login?role=${role}`}>Log in</a></>
                 ) : (
-                  <>Don’t have an account? <a className="underline-offset-4 hover:underline" href={`/login?mode=signup&role=${role}`}>Sign up</a></>
+                  <>Don’t have an account? <a className="underline-offset-4 hover:underline" href={`/register?role=${role}`}>Register</a></>
                 )}
               </div>
             </CardContent>
